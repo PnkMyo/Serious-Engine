@@ -38,6 +38,21 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "SDL.h"
 #endif
 
+
+#ifdef PLATFORM_VITA
+#include <malloc.h>
+#include <conio.h>
+#include <crtdbg.h>
+#include <winsock2.h>
+#include <windows.h>
+#include <mmsystem.h> // for timers
+#else
+#include "SDL.h"
+#include <vitaGL.h>
+#endif
+
+
+
 #if PLATFORM_MACOSX
 #ifdef MACOS
 #undef MACOS

@@ -1,24 +1,5 @@
-## This file is a quick tutorial on writing CMakeLists for targeting the Vita
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.7)
 project(SeriousEngine)
-
-## This includes the Vita toolchain, must go before project definition
-# It is a convenience so you do not have to type
-# -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake for cmake. It is
-# highly recommended that you include this block for all projects.
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  if(DEFINED ENV{VITASDK})
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
-  else()
-    message(FATAL_ERROR "Please define VITASDK to point to your SDK path!")
-  endif()
-endif()
-
-include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
-
-set(VITA_APP_NAME "Serious Sam")
-set(VITA_TITLEID  "PNKSRSAM")
-set(VITA_VERSION  "0.01")
 
 # Set @rpath for Mac OS X shared library install names.
 #cmake_policy(SET CMP0042 NEW)
@@ -29,12 +10,12 @@ option(USE_SYSTEM_ZLIB "Use systems zlib development files" On)
 
 # fallback for cmake versions without add_compile_options # RAKE! Borrowed from dhewm3 project
 if(NOT COMMAND add_compile_options)
-    function(add_compile_options)
-        foreach(arg ${ARGN})
-            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${arg}" PARENT_SCOPE)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${arg}" PARENT_SCOPE)
-        endforeach()
-    endfunction()
+	function(add_compile_options)
+		foreach(arg ${ARGN})
+			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${arg}" PARENT_SCOPE)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${arg}" PARENT_SCOPE)
+		endforeach()
+	endfunction()
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
@@ -53,7 +34,7 @@ if(NOT USE_SYSTEM_SDL2)
 else()
     find_package(SDL2 REQUIRED)
     if(SDL2_FOUND)
-    include_directories(${SDL2_INCLUDE_DIR})
+	include_directories(${SDL2_INCLUDE_DIR})
     else()
         message(FATAL_ERROR "Error USE_SYSTEM_SDL2 is set but neccessary developer files are missing")
     endif()
@@ -101,112 +82,109 @@ endif()
 ## ** RAKE! start compiler specific flags section **
 ## ** RAKE! Borrowed from dhewm3 project, need to **
 ## ** RAKE! clean up for SeriousEngine use. Also  **
-## ** RAKE! need to make this pandora safe.   **
+## ** RAKE! need to make this pandora safe.	  **
 # compiler specific flags
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    # This section and the like are for flags/defines that can be shared between 
-    # c and c++ compile options
-    add_compile_options(-Wall)
-    add_compile_options(-pipe)
-    add_compile_options(-fPIC)
-    add_compile_options(-march=native)
+	# This section and the like are for flags/defines that can be shared between 
+	# c and c++ compile options
+	add_compile_options(-Wall)
+	add_compile_options(-pipe)
+	add_compile_options(-fPIC)
+	add_compile_options(-march=native)
         add_compile_options(-fno-strict-aliasing)
-    add_definitions(-D_REENTRANT=1)
-    add_definitions(-D_MT=1)
+	add_definitions(-D_REENTRANT=1)
+	add_definitions(-D_MT=1)
 
         ## Add your custom C and CXX flags on the command line aka -DCMAKE_C_FLAGS=-std=c98 or -DCMAKE_CXX_FLAGS=-std=c++11
 
-## Flags and includes for building
-# Note that we make sure not to overwrite previous flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-# Optional. You can specify more param.sfo flags this way.
-set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d PARENTAL_LEVEL=1")
+	## For C flags
+        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g -D_DEBUG=1 -DDEBUG=1 -O0")
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3 -fno-unsafe-math-optimizations")
+        set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations")
+        set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -fno-unsafe-math-optimizations")
 
-
-
-    ## For C++ flags
+	## For C++ flags
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -D_DEBUG=1 -DDEBUG=1 -O0")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3 -fno-unsafe-math-optimizations")
         set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations") ## RAKE! Does -DNDEBUG=1 and -D_NDEBUG=1 mess with RelWithDebInfo?
         set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -fno-unsafe-math-optimizations")
 
-    # TODO fix these warnings
-    add_compile_options(-Wno-switch)
-    add_compile_options(-Wno-char-subscripts)
-    add_compile_options(-Wno-unknown-pragmas)
-    add_compile_options(-Wno-unused-variable) # TODO: maybe only enable this for Entities
-    add_compile_options(-Wno-unused-value)    # same here (the Scripts generate tons of unused variables and values)
-    add_compile_options(-Wno-missing-braces)
-    add_compile_options(-Wno-overloaded-virtual)
-    add_compile_options(-Wno-invalid-offsetof)
-    MESSAGE(WARNING, "re-enable some of the warnings some day!")
+	# TODO fix these warnings
+	add_compile_options(-Wno-switch)
+	add_compile_options(-Wno-char-subscripts)
+	add_compile_options(-Wno-unknown-pragmas)
+	add_compile_options(-Wno-unused-variable) # TODO: maybe only enable this for Entities
+	add_compile_options(-Wno-unused-value)    # same here (the Scripts generate tons of unused variables and values)
+	add_compile_options(-Wno-missing-braces)
+	add_compile_options(-Wno-overloaded-virtual)
+	add_compile_options(-Wno-invalid-offsetof)
+	MESSAGE(WARNING, "re-enable some of the warnings some day!")
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
-        # !!! FIXME: turn a bunch of these off, this is just for now. I hope.  --ryan.
-        add_compile_options(-Wno-c++11-compat-deprecated-writable-strings)
-    endif()
+	if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+		# !!! FIXME: turn a bunch of these off, this is just for now. I hope.  --ryan.
+		add_compile_options(-Wno-c++11-compat-deprecated-writable-strings)
+	endif()
 
-    if(MACOSX)
-        add_definitions(-DPLATFORM_UNIX=1)
-            add_definitions(-DPLATFORM_MACOSX=1)
-            add_definitions(-DPRAGMA_ONCE=1)
-    elseif(WINDOWS)
-        add_definitions(-DPLATFORM_WIN32=1)
-            add_definitions(-DPRAGMA_ONCE=1)
+	if(MACOSX)
+		add_definitions(-DPLATFORM_UNIX=1)
+    		add_definitions(-DPLATFORM_MACOSX=1)
+    		add_definitions(-DPRAGMA_ONCE=1)
+	elseif(WINDOWS)
+		add_definitions(-DPLATFORM_WIN32=1)
+    		add_definitions(-DPRAGMA_ONCE=1)
                 add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
                 add_definitions(-D_CRT_SECURE_NO_DEPRECATE=1)
-    elseif(LINUX)
-            set(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
-            add_definitions(-DPLATFORM_UNIX=1)
-            add_definitions(-D_FILE_OFFSET_BITS=64)
-            add_definitions(-D_LARGEFILE_SOURCE=1)
-            add_definitions(-DPRAGMA_ONCE=1)
-    elseif(FREEBSD)
-            set(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
-            add_definitions(-DPLATFORM_UNIX=1)
-            add_definitions(-DPLATFORM_FREEBSD=1)
-            add_definitions(-D_FILE_OFFSET_BITS=64)
-            add_definitions(-D_LARGEFILE_SOURCE=1)
-            add_definitions(-DPRAGMA_ONCE=1)
-            include_directories("/usr/local/include")
-    elseif(VITA)
-        add_definitions(-DPLATFORM_VITA=1)
-            add_definitions(-DPRAGMA_ONCE=1)
-                add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
-                add_definitions(-D_CRT_SECURE_NO_DEPRECATE=1)
-    endif()
-    
+	elseif(LINUX)
+	    	set(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
+    		add_definitions(-DPLATFORM_UNIX=1)
+    		add_definitions(-D_FILE_OFFSET_BITS=64)
+    		add_definitions(-D_LARGEFILE_SOURCE=1)
+    		add_definitions(-DPRAGMA_ONCE=1)
+	elseif(FREEBSD)
+    		set(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
+    		add_definitions(-DPLATFORM_UNIX=1)
+    		add_definitions(-DPLATFORM_FREEBSD=1)
+    		add_definitions(-D_FILE_OFFSET_BITS=64)
+    		add_definitions(-D_LARGEFILE_SOURCE=1)
+    		add_definitions(-DPRAGMA_ONCE=1)
+    		include_directories("/usr/local/include")
+	endif()
+	
         if(MACOSX OR LINUX OR FREEBSD)
-        add_compile_options(-pthread)
+		add_compile_options(-pthread)
                 add_compile_options(-fsigned-char)
-    endif()
+	endif()
 
-    if(CMAKE_COMPILER_IS_GNUCC)
-            # !!! FIXME: turn a bunch of these off, this is just for now. I hope.  --ryan.
-            add_compile_options(-Wno-invalid-offsetof)
-    endif()
+	if(CMAKE_COMPILER_IS_GNUCC)
+	    	# !!! FIXME: turn a bunch of these off, this is just for now. I hope.  --ryan.
+    		add_compile_options(-Wno-invalid-offsetof)
+	endif()
 
 elseif(MSVC) # RAKE! I don't know if this will build with MSVC
-    add_compile_options(/W4)
-    add_compile_options(/wd4100) # unreferenced formal parameter
-    add_compile_options(/wd4127) # conditional expression is constant
-    add_compile_options(/wd4244) # possible loss of data
-    add_compile_options(/wd4245) # signed/unsigned mismatch
-    add_compile_options(/wd4267) # possible loss of data
-    add_compile_options(/wd4714) # 'function' marked as __forceinline not inlined
-    add_compile_options(/wd4996) # 'function': was declared deprecated
-    add_compile_options(/wd4068) # unknown pragma
+	add_compile_options(/W4)
+	add_compile_options(/wd4100) # unreferenced formal parameter
+	add_compile_options(/wd4127) # conditional expression is constant
+	add_compile_options(/wd4244) # possible loss of data
+	add_compile_options(/wd4245) # signed/unsigned mismatch
+	add_compile_options(/wd4267) # possible loss of data
+	add_compile_options(/wd4714) # 'function' marked as __forceinline not inlined
+	add_compile_options(/wd4996) # 'function': was declared deprecated
+	add_compile_options(/wd4068) # unknown pragma
         set(CMAKE_C_FLAGS_DEBUG "-D_DEBUG /Od /Zi /MDd")
-    set(CMAKE_C_FLAGS_RELEASE "/Ox /Oy /MD")
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Ox /Oy /Zi /MD")
-    set(CMAKE_C_FLAGS_MINSIZEREL "/Ox /Oy /Os /MD")
+	set(CMAKE_C_FLAGS_RELEASE "/Ox /Oy /MD")
+	set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Ox /Oy /Zi /MD")
+	set(CMAKE_C_FLAGS_MINSIZEREL "/Ox /Oy /Os /MD")
 else()
-    message(FATAL_ERROR "Unsupported compiler")
+	message(FATAL_ERROR "Unsupported compiler")
 endif()
 
 ## ** RAKE! end compiler specific flags section **
 
+if(DEBUG)
+    set(DEBUGSUFFIX "D")
+else()
+    set(DEBUGSUFFIX "")
+endif()
 
 option(USE_ASM "Use ASM code" TRUE)
 if (USE_ASM)
@@ -302,10 +280,6 @@ macro(add_parser_and_scanner _PARSER _SCANNER)
     )
 endmacro()
 
-link_directories(
-  ${CMAKE_CURRENT_BINARY_DIR}
-)
-
 # Build ECC from source if there wasn't a prebuilt-one specified on the command line.
 #  Normally we build it here, but we might need a prebuilt, native binary if
 #  we're cross-compiling the rest of the game.
@@ -314,10 +288,6 @@ if(NOT ECC)
     add_executable(ecc Ecc/Main.cpp Ecc/Parser.cpp Ecc/Parser.h Ecc/Scanner.cpp)
     set(ECC "ecc")
 endif()
-
-link_directories(
-  ${CMAKE_CURRENT_BINARY_DIR}
-)
 
 macro(entity _NAME)
     add_custom_command(
@@ -626,10 +596,10 @@ else()
  add_library(${ENTITIESMPLIB} SHARED
      ${ENTITIES_CPP}
      EntitiesMP/Common/Common.cpp
-     EntitiesMP/Common/Particles.cpp
-     EntitiesMP/Common/EmanatingParticles.cpp
-     EntitiesMP/Common/PathFinding.cpp
-     EntitiesMP/Common/HUD.cpp
+ 	 EntitiesMP/Common/Particles.cpp
+ 	 EntitiesMP/Common/EmanatingParticles.cpp
+ 	 EntitiesMP/Common/PathFinding.cpp
+ 	 EntitiesMP/Common/HUD.cpp
  )
 endif()
 
@@ -932,30 +902,108 @@ add_executable(ssam
 )
 add_dependencies(ssam ParseEntities)
 # Make symbols in the main executable available to dynamic objects
+set_target_properties(ssam PROPERTIES ENABLE_EXPORTS ON)
 
+# !!! FIXME: this is an option because you have to recompile the entire engine twice.
+# !!! FIXME:  If we can put the engine in a static library and not lose symbols,
+# !!! FIXME:  that's a better plan and we can remove the toggle here.
+option(BUILD_DEDICATED_SERVER "Compile the dedicated server, too" FALSE)
+if(BUILD_DEDICATED_SERVER)
+    add_executable(SeriousSamDedicated ${ENGINE_SRCS} DedicatedServer/DedicatedServer.cpp)
+    add_dependencies(SeriousSamDedicated ParseEntities)
+    # Make symbols in the main executable available to dynamic objects
+    set_target_properties(SeriousSamDedicated PROPERTIES ENABLE_EXPORTS ON)
+endif()
 
-
-    target_link_libraries(ssam SceLibKernel_stub)
+if(MACOSX)
     target_link_libraries(ssam ${ZLIB_LIBRARIES})
-    target_link_libraries(ssam ${SDL2_LIBRARY})
-    target_link_libraries(ssam vitagl)
-     target_link_libraries(ssam SceDisplay_stub)
-    target_link_libraries(ssam SceGxm_stub)
-     target_link_libraries(ssam "m")
+    if(USE_SYSTEM_SDL2) # use sdl2 framework on system
+      target_link_libraries(ssam ${SDL2_LIBRARY})
+    else() # use local libsdl2
+	  find_library(COCOA_FRAMEWORK Cocoa)
+      target_link_libraries(ssam "${COCOA_FRAMEWORK}")
+      target_link_libraries(ssam "${CMAKE_CURRENT_SOURCE_DIR}/lib/macosx/libSDL2-2.0.0.dylib")
+    endif()
+    
+    if(BUILD_DEDICATED_SERVER)
+		target_link_libraries(SeriousSamDedicated ${ZLIB_LIBRARIES})
+		if(USE_SYSTEM_SDL2)
+			target_link_libraries(SeriousSamDedicated ${SDL2_LIBRARY})
+		else()
+			target_link_libraries(SeriousSamDedicated "${COCOA_FRAMEWORK}")
+			target_link_libraries(SeriousSamDedicated "${CMAKE_CURRENT_SOURCE_DIR}/lib/macosx/libSDL2-2.0.0.dylib")
+		endif()
+    endif()
+endif()
+
+if(LINUX)
+    set_target_properties(ssam PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN")
+    target_link_libraries(ssam "m")
     target_link_libraries(ssam "dl")
     target_link_libraries(ssam "pthread")
+    target_link_libraries(ssam ${SDL2_LIBRARY})
+    target_link_libraries(ssam ${ZLIB_LIBRARIES})
+    if(PANDORA)
+    	target_link_libraries(ssam "rt")
+    endif()
+    if(BUILD_DEDICATED_SERVER)
+        set_target_properties(SeriousSamDedicated PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN")
+        target_link_libraries(SeriousSamDedicated "m")
+        target_link_libraries(SeriousSamDedicated "dl")
+        target_link_libraries(SeriousSamDedicated "pthread")
+	target_link_libraries(SeriousSamDedicated ${SDL2_LIBRARY})
+        target_link_libraries(SeriousSamDedicated ${ZLIB_LIBRARIES})
+    endif()
+endif()
 
+if(FREEBSD)
+    set_target_properties(ssam PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN")
+    target_link_libraries(ssam "m")
+    target_link_libraries(ssam "pthread")
+    target_link_libraries(ssam ${SDL2_LIBRARY})
+    target_link_libraries(ssam ${ZLIB_LIBRARIES})
+    if(BUILD_DEDICATED_SERVER)
+        set_target_properties(SeriousSamDedicated PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN")
+        target_link_libraries(SeriousSamDedicated "m")
+        target_link_libraries(SeriousSamDedicated "pthread")
+        target_link_libraries(SeriousSamDedicated ${SDL2_LIBRARY})
+        target_link_libraries(SeriousSamDedicated ${ZLIB_LIBRARIES})
+    endif()
+endif()
 
-## Create Vita files
-vita_create_self(SeriousEngine.self Engine)
-# The FILE directive lets you add additional files to the VPK, the syntax is
-# FILE src_path dst_path_in_vpk. In this case, we add the LiveArea paths.
-vita_create_vpk(SeriousSam.vpk ${VITA_TITLEID} SeriousEngine.self
-  VERSION ${VITA_VERSION}
-  NAME ${VITA_APP_NAME}
-  FILE sce_sys/icon0.png sce_sys/icon0.png
-  FILE sce_sys/livearea/contents/bg.png sce_sys/livearea/contents/bg.png
-  FILE sce_sys/livearea/contents/startup.png sce_sys/livearea/contents/startup.png
-  FILE sce_sys/livearea/contents/template.xml sce_sys/livearea/contents/template.xml
-)
+if(TFE)
+ set_target_properties(ssam PROPERTIES OUTPUT_NAME "ssam-tfe")
+endif()
+
+# RAKE! Install Section.
+if(DEBUG) # RAKE! Will this work with TFE?
+    install(TARGETS ssam ${SHADERSLIB} ${GAMEMPLIB} ${ENTITIESMPLIB}
+            RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/Bin"
+            LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/Bin/Debug"
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    if(BUILD_DEDICATED_SERVER)
+        install(TARGETS SeriousSamDedicated
+                RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/Bin
+                PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    endif()
+else()
+    install(TARGETS ssam ${SHADERSLIB} ${GAMEMPLIB} ${ENTITIESMPLIB}
+            RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/Bin"
+            LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/Bin"
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    if(BUILD_DEDICATED_SERVER)
+        install(TARGETS SeriousSamDedicated
+                RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/Bin"
+                PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    endif()
+endif()
+
+# RAKE! If CMAKE_INSTALL_PREFIX was set during config then its not a local install
+# and SE1_10.gro needs to be installed to Games root dir.
+if(NOT LOCAL_INSTALL)
+    install(FILES ${CMAKE_SOURCE_DIR}/../SE1_10.gro
+            DESTINATION ${CMAKE_INSTALL_PREFIX}
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+endif()
+
 # end of CMakeLists.txt ...
